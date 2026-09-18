@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Malody .mc chart prettifier" />
+  <title>Malody Prettify</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+
+      --bg: #09090b;
+      --surface: #111113;
+      --surface-hover: #17171a;
+      --border: #27272a;
+      --border-hover: #3f3f46;
+      --text: #fafafa;
+      --muted: #a1a1aa;
+      --subtle: #71717a;
+      --accent: #ffffff;
+      --danger: #f87171;
+
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* =========================
+       Upload screen
+       ========================= */
+
+    #app {
+      min-height: 100vh;
+    }
+
+    .upload-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .upload-wrapper {
+      width: min(720px, 100%);
+      text-align: center;
+    }
+
+    .brand {
+      margin-bottom: 34px;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 650;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .drop-zone {
+      position: relative;
+
+      min-height: 260px;
+      width: 100%;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      padding: 40px;
+
+      border: 1px dashed var(--border-hover);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+    }
+
+    .drop-zone:hover {
+      background: var(--surface-hover);
+      border-color: #52525b;
+    }
+
+    .drop-zone.dragover {
+      background: #18181b;
+      border-color: #a1a1aa;
+      transform: scale(1.01);
+    }
+
+    .upload-icon {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 18px;
+      color: #d4d4d8;
+    }
+
+    .drop-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .drop-description {
+      margin: 8px 0 0;
+      color: var(--subtle);
+      font-size: 13px;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .supported {
+      margin-top: 16px;
+      color: var(--subtle);
+      font-size: 12px;
+    }
+
+    /* =========================
+       Editor screen
+       ========================= */
+
+    .editor-screen {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .editor-screen.active {
+      display: block;
+    }
+
+    .editor-header {
+      height: 64px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 24px;
+
+      border-bottom: 1px solid var(--border);
+      background: rgba(9, 9, 11, 0.92);
+
+      position: sticky;
+      top: 0;
+      z-index: 10;
+
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-brand {
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .file-name {
+      max-width: 420px;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      color: var(--muted);
+      font-size: 13px;
+
+      padding-left: 14px;
+      border-left: 1px solid var(--border);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .button {
+      height: 36px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+
+      padding: 0 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      background: var(--surface);
+      color: var(--text);
+
+      font-size: 13px;
+      font-weight: 500;
+
+      transition:
+        background 0.15s ease,
+        border-color 0.15s ease;
+    }
+
+    .button:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+    }
+
+    .button.primary {
+      background: var(--text);
+      color: #09090b;
+      border-color: var(--text);
+    }
+
+    .button.primary:hover {
+      background: #e4e4e7;
+    }
+
+    .button svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .editor-main {
+      width: min(1400px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+
+      margin-bottom: 14px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .panel {
+      min-width: 0;
+
+      overflow: hidden;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface);
+    }
+
+    .panel-header {
+      height: 42px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 14px;
+
+      border-bottom: 1px solid var(--border);
+
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .panel-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #71717a;
+    }
+
+    .code-area {
+      width: 100%;
+      height: calc(100vh - 180px);
+      min-height: 480px;
+
+      display: block;
+
+      padding: 18px;
+
+      resize: none;
+
+      border: 0;
+      outline: 0;
+
+      background: transparent;
+      color: #e4e4e7;
+
+      font-family:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        Menlo,
+        monospace;
+
+      font-size: 12px;
+      line-height: 1.65;
+
+      tab-size: 4;
+    }
+
+    .code-area::selection {
+      background: #3f3f46;
+    }
+
+    #inputArea {
+      color: #a1a1aa;
+    }
+
+    #outputArea {
+      color: #e4e4e7;
+    }
+
+    .mobile-actions {
+      display: none;
+    }
+
+    /* =========================
+       Responsive
+       ========================= */
+
+    @media (max-width: 800px) {
+      .upload-screen {
+        padding: 18px;
+      }
+
+      .brand-title {
+        font-size: 26px;
+      }
+
+      .drop-zone {
+        min-height: 220px;
+      }
+
+      .editor-header {
+        height: auto;
+        min-height: 60px;
+        padding: 12px 14px;
+
+        gap: 12px;
+      }
+
+      .header-left {
+        overflow: hidden;
+      }
+
+      .header-brand {
+        display: none;
+      }
+
+      .file-name {
+        border-left: 0;
+        padding-left: 0;
+        max-width: 48vw;
+      }
+
+      .header-actions .button span {
+        display: none;
+      }
+
+      .header-actions .button {
+        width: 36px;
+        padding: 0;
+      }
+
+      .editor-main {
+        padding: 14px;
+      }
+
+      .editor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        min-height: 300px;
+      }
+
+      .code-area {
+        height: 40vh;
+        min-height: 280px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- =========================
+         Upload
+         ========================= -->
+
+    <section id="uploadScreen" class="upload-screen">
+      <div class="upload-wrapper">
+
+        <div class="brand">
+          <h1 class="brand-title">Malody Prettify</h1>
+          <p class="brand-subtitle">
+            Format Malody .mc chart files
+          </p>
+        </div>
+
+        <label
+          id="dropZone"
+          class="drop-zone"
+          for="fileInput"
+        >
+          <svg
+            class="upload-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 16V4" />
+            <path d="M7 9l5-5 5 5" />
+            <path d="M5 20h14" />
+          </svg>
+
+          <p class="drop-title">
+            Click to upload or drag and drop
+          </p>
+
+          <p class="drop-description">
+            Upload a Malody chart file
+          </p>
+
+          <div class="supported">
+            .mc files
+          </div>
+
+          <input
+            id="fileInput"
+            class="file-input"
+            type="file"
+            accept=".mc,application/json,text/json"
+          />
+        </label>
+
+      </div>
+    </section>
+
+
+    <!-- =========================
+         Editor
+         ========================= -->
+
+    <section id="editorScreen" class="editor-screen">
+
+      <header class="editor-header">
+
+        <div class="header-left">
+          <div class="header-brand">
+            Malody Prettify
+          </div>
+
+          <div
+            id="fileName"
+            class="file-name"
+          >
+            chart.mc
+          </div>
+        </div>
+
+        <div class="header-actions">
+
+          <button
+            id="resetButton"
+            class="button"
+            type="button"
+            title="Open another file"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 4v5h5" />
+            </svg>
+            <span>Reset</span>
+          </button>
+
+          <button
+            id="copyButton"
+            class="button"
+            type="button"
+            title="Copy output"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="10" height="10" rx="2" />
+              <path d="M15 9V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+            </svg>
+            <span>Copy</span>
+          </button>
+
+          <button
+            id="downloadButton"
+            class="button primary"
+            type="button"
+            title="Download .mc"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 4v12" />
+              <path d="M7 11l5 5 5-5" />
+              <path d="M5 20h14" />
+            </svg>
+            <span>Download</span>
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <main class="editor-main">
+
+        <div class="toolbar">
+
+          <div
+            id="status"
+            class="status"
+          >
+            Ready
+          </div>
+
+        </div>
+
+
+        <div class="editor-grid">
+
+          <!-- Input -->
+
+          <div class="panel">
+
+            <div class="panel-header">
+              <div class="panel-label">
+                <span class="panel-dot"></span>
+                Input
+              </div>
+            </div>
+
+            <textarea
+              id="inputArea"
+              class="code-area"
+              spellcheck="false"
+              placeholder="Paste .mc JSON here..."
+            ></textarea>
+
+          </div>
+
+
+          <!-- Output -->
+
+          <div class="panel">
+
+            <div class="panel-header">
+              <div class="panel-label">
+                <span class="panel-dot"></span>
+                Prettified
+              </div>
+            </div>
+
+            <textarea
+              id="outputArea"
+              class="code-area"
+              spellcheck="false"
+              readonly
+              placeholder="Prettified chart will appear here..."
+            ></textarea>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="mobile-actions"
+          aria-hidden="true"
+        ></div>
+
+      </main>
+
+    </section>
+
+  </div>
+
+
+  <script>
+    /*
+     * Malody Prettify Web
+     *
+     * Formatting behavior based on:
+     * LuiCat/malody-prettify
+     *
+     * Original project:
+     * https://github.com/LuiCat/malody-prettify
+     *
+     * The formatter follows the original visitor logic:
+     *
+     *   root.time
+     *   root.effect
+     *   root.note
+     *
+     * are collapsed onto one line.
+     *
+     * Arrays belonging to:
+     *
+     *   *.beat
+     *   *.endbeat
+     *
+     * are collapsed without spaces.
+     */
+
+
+    /* =========================================
+       DOM
+       ========================================= */
+
+    const uploadScreen =
+      document.getElementById("uploadScreen");
+
+    const editorScreen =
+      document.getElementById("editorScreen");
+
+    const dropZone =
+      document.getElementById("dropZone");
+
+    const fileInput =
+      document.getElementById("fileInput");
+
+    const fileName =
+      document.getElementById("fileName");
+
+    const inputArea =
+      document.getElementById("inputArea");
+
+    const outputArea =
+      document.getElementById("outputArea");
+
+    const status =
+      document.getElementById("status");
+
+    const resetButton =
+      document.getElementById("resetButton");
+
+    const copyButton =
+      document.getElementById("copyButton");
+
+    const downloadButton =
+      document.getElementById("downloadButton");
+
+
+    /* =========================================
+       State
+       ========================================= */
+
+    let currentFileName = "chart.mc";
+
+
+    /* =========================================
+       Upload
+       ========================================= */
+
+    fileInput.addEventListener("change", event => {
+      const file = event.target.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      loadFile(file);
+    });
+
+
+    dropZone.addEventListener("dragover", event => {
+      event.preventDefault();
+
+      dropZone.classList.add("dragover");
+    });
+
+
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.classList.remove("dragover");
+    });
+
+
+    dropZone.addEventListener("drop", event => {
+      event.preventDefault();
+
+      dropZone.classList.remove("dragover");
+
+      const file = event.dataTransfer.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      loadFile(file);
+    });
+
+
+    async function loadFile(file) {
+
+      currentFileName =
+        file.name.toLowerCase().endsWith(".mc")
+          ? file.name
+          : file.name + ".mc";
+
+      fileName.textContent =
+        currentFileName;
+
+      try {
+
+        const text =
+          await file.text();
+
+        inputArea.value = text;
+
+        prettifyCurrent();
+
+        uploadScreen.style.display = "none";
+        editorScreen.classList.add("active");
+
+      } catch (error) {
+
+        showError(
+          "Failed to read the file."
+        );
+
+        console.error(error);
+      }
+    }
+
+
+    /* =========================================
+       Formatter
+       ========================================= */
+
+    const CollapseType = {
+      NONE: 0,
+      OBJECT_SPACE: 1,
+      ARRAY_NO_SPACE: 2
+    };
+
+
+    function getCollapseType(scope) {
+
+      if (
+        scope === "root.time" ||
+        scope === "root.effect" ||
+        scope === "root.note"
+      ) {
+        return CollapseType.OBJECT_SPACE;
+      }
+
+      if (
+        scope.endsWith(".beat") ||
+        scope.endsWith(".endbeat")
+      ) {
+        return CollapseType.ARRAY_NO_SPACE;
+      }
+
+      return undefined;
+    }
+
+
+    class VisitorState {
+
+      constructor(
+        scope,
+        indent,
+        collapse
+      ) {
+
+        this.scope = scope;
+        this.indent = indent;
+        this.collapse = collapse;
+
+        this.arrayIndentString =
+          collapse === CollapseType.ARRAY_NO_SPACE
+            ? ""
+            : "    ".repeat(
+                Math.max(0, indent - 1)
+              );
+
+        this.objectIndentString =
+          collapse === CollapseType.OBJECT_SPACE
+            ? ""
+            : this.arrayIndentString;
+
+        this.arraySplitString =
+          collapse === CollapseType.ARRAY_NO_SPACE
+            ? ""
+            : "\n";
+
+        this.objectSplitString =
+          collapse === CollapseType.OBJECT_SPACE
+            ? " "
+            : this.arraySplitString;
+      }
+
+
+      nextLevel(collapse) {
+
+        return new VisitorState(
+          this.scope,
+          this.indent + 1,
+          collapse === undefined
+            ? this.collapse
+            : collapse
+        );
+      }
+
+
+      nextScope(scope) {
+
+        const fullScope =
+          this.scope + "." + scope;
+
+        const collapse =
+          getCollapseType(fullScope);
+
+        return new VisitorState(
+          fullScope,
+          this.indent,
+          collapse === undefined
+            ? this.collapse
+            : collapse
+        );
+      }
+    }
+
+
+    /*
+     * A small JSON AST parser.
+     *
+     * We don't actually need json-to-ast in
+     * the browser. Instead, JavaScript's native
+     * JSON parser is used and the visitor below
+     * works directly on JSON values.
+     *
+     * This preserves the output rules of the
+     * original formatter.
+     */
+
+
+    function formatValue(
+      value,
+      state,
+      propertyKey = null
+    ) {
+
+      /*
+       * Object
+       */
+
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Array.isArray(value)
+      ) {
+
+        const split =
+          state.objectSplitString;
+
+        const keys =
+          Object.keys(value);
+
+        let result =
+          "{" + split;
+
+        const items = [];
+
+        for (const key of keys) {
+
+          const nextState =
+            state.nextScope(key);
+
+          const childState =
+            state.nextLevel(
+              nextState.collapse
+            );
+
+          /*
+           * The original implementation calls
+           * visitor(child, state.nextLevel())
+           * while the property itself calls
+           * nextScope().
+           *
+           * This produces the same scope-sensitive
+           * behavior for Malody charts.
+           */
+
+          const valueState =
+            state.nextScope(key);
+
+          let formatted =
+            formatValue(
+              value[key],
+              valueState,
+              key
+            );
+
+          formatted =
+            state.objectIndentString +
+            JSON.stringify(key) +
+            ": " +
+            formatted;
+
+          items.push(formatted);
+        }
+
+        result +=
+          items.join("," + split) +
+          split;
+
+        result +=
+          state.objectIndentString +
+          "}";
+
+        return result;
+      }
+
+
+      /*
+       * Array
+       */
+
+      if (Array.isArray(value)) {
+
+        const split =
+          state.arraySplitString;
+
+        let result =
+          "[" + split;
+
+        const items = [];
+
+        const nextState =
+          state.nextLevel();
+
+        for (const item of value) {
+
+          items.push(
+            nextState.arrayIndentString +
+            formatValue(
+              item,
+              nextState
+            )
+          );
+        }
+
+        result +=
+          items.join("," + split) +
+          split;
+
+        result +=
+          nextState.arrayIndentString +
+          "]";
+
+        return result;
+      }
+
+
+      /*
+       * Primitive
+       */
+
+      return JSON.stringify(value);
+    }
+
+
+    function prettify(data) {
+
+      const parsed =
+        JSON.parse(data);
+
+      const rootState =
+        new VisitorState(
+          "root",
+          0,
+          CollapseType.NONE
+        );
+
+      return (
+        formatValue(
+          parsed,
+          rootState
+        ) + "\n"
+      );
+    }
+
+
+    /* =========================================
+       Prettify
+       ========================================= */
+
+    function prettifyCurrent() {
+
+      const raw =
+        inputArea.value;
+
+      if (!raw.trim()) {
+
+        outputArea.value = "";
+
+        setStatus("Ready");
+
+        return;
+      }
+
+      try {
+
+        const result =
+          prettify(raw);
+
+        outputArea.value =
+          result;
+
+        setStatus(
+          "Prettified successfully"
+        );
+
+      } catch (error) {
+
+        outputArea.value = "";
+
+        showError(
+          "Invalid JSON / .mc file"
+        );
+
+        console.error(error);
+      }
+    }
+
+
+    inputArea.addEventListener(
+      "input",
+      () => {
+        prettifyCurrent();
+      }
+    );
+
+
+    /* =========================================
+       Copy
+       ========================================= */
+
+    copyButton.addEventListener(
+      "click",
+      async () => {
+
+        const value =
+          outputArea.value;
+
+        if (!value) {
+          return;
+        }
+
+        try {
+
+          await navigator.clipboard.writeText(
+            value
+          );
+
+          const original =
+            copyButton.innerHTML;
+
+          copyButton.innerHTML =
+            `
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+              <span>Copied</span>
+            `;
+
+          setTimeout(() => {
+            copyButton.innerHTML =
+              original;
+          }, 1200);
+
+        } catch (error) {
+
+          showError(
+            "Could not copy to clipboard."
+          );
+
+          console.error(error);
+        }
+      }
+    );
+
+
+    /* =========================================
+       Download
+       ========================================= */
+
+    downloadButton.addEventListener(
+      "click",
+      () => {
+
+        const content =
+          outputArea.value;
+
+        if (!content) {
+          return;
+        }
+
+        const blob =
+          new Blob(
+            [content],
+            {
+              type: "application/json;charset=utf-8"
+            }
+          );
+
+        const url =
+          URL.createObjectURL(blob);
+
+        const a =
+          document.createElement("a");
+
+        a.href = url;
+
+        a.download =
+          currentFileName ||
+          "chart.mc";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+        URL.revokeObjectURL(url);
+
+        setStatus(
+          "Downloaded"
+        );
+      }
+    );
+
+
+    /* =========================================
+       Reset
+       ========================================= */
+
+    resetButton.addEventListener(
+      "click",
+      () => {
+
+        inputArea.value = "";
+        outputArea.value = "";
+
+        currentFileName =
+          "chart.mc";
+
+        fileName.textContent =
+          "chart.mc";
+
+        status.textContent =
+          "Ready";
+
+        status.classList.remove(
+          "error"
+        );
+
+        fileInput.value = "";
+
+        editorScreen.classList.remove(
+          "active"
+        );
+
+        uploadScreen.style.display =
+          "flex";
+      }
+    );
+
+
+    /* =========================================
+       Status
+       ========================================= */
+
+    function setStatus(message) {
+
+      status.textContent =
+        message;
+
+      status.classList.remove(
+        "error"
+      );
+    }
+
+
+    function showError(message) {
+
+      status.textContent =
+        message;
+
+      status.classList.add(
+        "error"
+      );
+    }
+
+
+    /* =========================================
+       Prevent browser from opening dropped files
+       ========================================= */
+
+    window.addEventListener(
+      "dragover",
+      event => {
+        event.preventDefault();
+      }
+    );
+
+    window.addEventListener(
+      "drop",
+      event => {
+        event.preventDefault();
+      }
+    );
+  </script>
+</body>
+</html>
