@@ -4,6 +4,7 @@ A web-based tool for formatting Malody chart files (".mc") directly in your brow
 
 This project is based on "malody-prettify" (https://github.com/LuiCat/malody-prettify) by LuiCat and has been adapted for use as a standalone web application.
 
+
 ## Features
 
 - Import Malody ".mc" chart files
@@ -14,6 +15,7 @@ This project is based on "malody-prettify" (https://github.com/LuiCat/malody-pre
 - Runs entirely in the browser
 - No server-side file upload required
 
+
 ## Usage
 
 1. Import a ".mc" chart file.
@@ -21,11 +23,20 @@ This project is based on "malody-prettify" (https://github.com/LuiCat/malody-pre
 3. Review the formatted result.
 4. Copy the formatted data or download it as a ".mc" file.
 
+
+## Examples
+
+![](doc/preview_1.webp)
+![](doc/preview_2.webp)
+
+
 ## Privacy
 
 Chart files are processed locally in your browser and are not uploaded to a server.
 
+
 ## Credits
+
 
 This project is based on "malody-prettify" (https://github.com/LuiCat/malody-prettify) by LuiCat.
 
@@ -35,9 +46,11 @@ The original project also credits "JSON Pretty Printer" (https://github.com/sind
 
 ## License
 
+
 This project is licensed under the MIT License.
 
 See "LICENSE" (LICENSE) for the full license text.
+
 
 ## Disclaimer
 
