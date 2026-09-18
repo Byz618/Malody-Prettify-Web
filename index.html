@@ -128,7 +128,7 @@
       .editor-grid{gap:16px}
     }
   </style>
-</head>
+<script type="text/javascript" nonce="f5ffe8258a0043c9a71ae3c16db" src="//local.adguard.org?ts=1789269594895&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgxiYXJkX3N0b3JhZ2USUBINcmVzcG9uc2VfZGF0YRo_CjA3NzI5OTllNGM2MzNlZjZmMDAwNjViYzU1NmNiMzI1ODA3MzRlNjhlY2MwZDc5YTgSCxIHEKqS1rS-FxgB%26filename%3Dindex.html%26opi%3D103135050&amp;app=com.android.chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-dnt"></script><script type="text/javascript" nonce="f5ffe8258a0043c9a71ae3c16db" src="//local.adguard.org?ts=1789269594895&amp;name=AdGuard%20Extra&amp;name=Disable%20AMP&amp;type=user-script"></script></head>
 <body>
 <div id="app">
   <section id="uploadScreen" class="upload-screen">
@@ -153,7 +153,7 @@
         <p class="drop-title">Click to upload or drag and drop</p>
         <p class="drop-description">Upload a Malody chart file</p>
         <div class="supported">.mc files</div>
-        <input id="fileInput" class="file-input" type="file" accept=".mc,application/json,text/json" />
+        <input id="fileInput" class="file-input" type="file" />
       </label>
     </div>
   </section>
@@ -335,7 +335,7 @@
   function prettify(data){
     const parsed=JSON.parse(data);
     const rootState=new VisitorState("root",0,CollapseType.NONE);
-    return formatValue(parsed,rootState)+"\\n";
+    return formatValue(parsed,rootState)+"\n";
   }
 
   function prettifyCurrent(){
@@ -372,7 +372,7 @@
     a.href=url;
 
     // 必ず元ファイルの拡張子を除去して .mc を付ける
-    const baseName=currentFileName.replace(/\.[^/.]+$/,"");
+    const baseName=currentFileName.replace(/\.[^/.]+$+/,"");
     a.download=baseName+".mc";
 
     document.body.appendChild(a);
