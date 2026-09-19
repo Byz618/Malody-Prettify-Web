@@ -153,7 +153,7 @@
         <p class="drop-title">Click to upload or drag and drop</p>
         <p class="drop-description">Upload a Malody chart file</p>
         <div class="supported">.mc files</div>
-        <input id="fileInput" class="file-input" type="file" accept=".mc,application/json,text/json" />
+        <input id="fileInput" class="file-input" type="file" accept=".mc,.json,.txt,application/json,text/json,text/plain,*/*" />
       </label>
     </div>
   </section>
@@ -378,8 +378,7 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    // 一部ブラウザで即 revoke するとダウンロードが失敗するため少し遅延
-    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    URL.revokeObjectURL(url);
     setStatus("Downloaded");
   });
 
