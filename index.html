@@ -66,25 +66,7 @@
     .drop-zone:hover{background:var(--surface-hover);border-color:#52525b}.drop-zone.dragover{background:#18181b;border-color:#a1a1aa;transform:scale(1.01)}
     .upload-icon{width:42px;height:42px;margin-bottom:18px;color:#d4d4d8}
     .drop-title{margin:0;font-size:15px;font-weight:500}.drop-description{margin:8px 0 0;color:var(--subtle);font-size:13px}
-    .file-input{
-      position:absolute;
-      width:1px;
-      height:1px;
-      padding:0;
-      margin:-1px;
-      overflow:hidden;
-      clip:rect(0,0,0,0);
-      white-space:nowrap;
-      border:0;
-    }
-    .supported{margin-top:16px;color:var(--subtle);font-size:12px}
-    .select-file-btn{
-      margin-top:18px;
-      height:40px;
-      padding:0 20px;
-      border-radius:10px;
-      font-size:14px;
-    }
+    .file-input{display:none}.supported{margin-top:16px;color:var(--subtle);font-size:12px}
     .editor-screen{display:none;min-height:100vh}.editor-screen.active{display:block}
     .editor-header{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border-bottom:1px solid var(--border);background:rgba(9,9,11,.92);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
     .header-left{min-width:0;display:flex;align-items:center;gap:14px}.header-brand{font-size:15px;font-weight:600;white-space:nowrap}
@@ -164,16 +146,15 @@
         </div>
         <p class="brand-subtitle">Format Malody .mc chart files</p>
       </div>
-      <div id="dropZone" class="drop-zone">
+      <label id="dropZone" class="drop-zone" for="fileInput">
         <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M5 20h14"/>
         </svg>
         <p class="drop-title">Click to upload or drag and drop</p>
         <p class="drop-description">Upload a Malody chart file</p>
-        <button id="selectFileButton" class="button primary select-file-btn" type="button">ファイルを選択</button>
         <div class="supported">.mc files</div>
-        <input id="fileInput" class="file-input" type="file" accept=".mc,.json,application/json,text/json,text/plain" />
-      </div>
+        <input id="fileInput" class="file-input" type="file" accept=".mc,application/json,text/json" />
+      </label>
     </div>
   </section>
 
@@ -230,7 +211,6 @@
   const editorScreen=document.getElementById("editorScreen");
   const dropZone=document.getElementById("dropZone");
   const fileInput=document.getElementById("fileInput");
-  const selectFileButton=document.getElementById("selectFileButton");
   const fileName=document.getElementById("fileName");
   const inputArea=document.getElementById("inputArea");
   const outputArea=document.getElementById("outputArea");
@@ -282,69 +262,20 @@
   themeButton.addEventListener("click",toggleTheme);
   uploadThemeButton.addEventListener("click",toggleTheme);
 
-  // iOS / mobile friendly file selection
-  function openFilePicker(){
-    fileInput.value=""; // allow re-selecting the same file
-    fileInput.click();
-  }
-
-  selectFileButton.addEventListener("click",e=>{
-    e.stopPropagation();
-    openFilePicker();
-  });
-
-  dropZone.addEventListener("click",e=>{
-    // Avoid double-trigger if the button was clicked
-    if(e.target===selectFileButton||selectFileButton.contains(e.target)) return;
-    openFilePicker();
-  });
-
-  fileInput.addEventListener("change",e=>{
-    const file=e.target.files?.[0];
-    if(file) loadFile(file);
-  });
-
-  dropZone.addEventListener("dragover",e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.add("dragover");
-  });
-  dropZone.addEventListener("dragleave",e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove("dragover");
-  });
-  dropZone.addEventListener("drop",e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    dropZone.classList.remove("dragover");
-    const file=e.dataTransfer.files?.[0];
-    if(file) loadFile(file);
-  });
-
-  // Prefer FileReader for wider iOS Safari compatibility
-  function readFileAsText(file){
-    return new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(reader.result);
-      reader.onerror=()=>reject(reader.error||new Error("Failed to read file"));
-      reader.readAsText(file,"UTF-8");
-    });
-  }
+  fileInput.addEventListener("change",e=>{const file=e.target.files?.[0];if(file)loadFile(file)});
+  dropZone.addEventListener("dragover",e=>{e.preventDefault();dropZone.classList.add("dragover")});
+  dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("dragover"));
+  dropZone.addEventListener("drop",e=>{e.preventDefault();dropZone.classList.remove("dragover");const file=e.dataTransfer.files?.[0];if(file)loadFile(file)});
 
   async function loadFile(file){
     currentFileName=file.name.toLowerCase().endsWith(".mc")?file.name:file.name+".mc";
     fileName.textContent=currentFileName;
     try{
-      const text=await readFileAsText(file);
-      inputArea.value=text;
+      inputArea.value=await file.text();
       prettifyCurrent();
       uploadScreen.style.display="none";
       editorScreen.classList.add("active");
-    }catch(error){
-      showError("Failed to read the file.");
-      console.error(error);
-    }
+    }catch(error){showError("Failed to read the file.");console.error(error)}
   }
 
   const CollapseType={NONE:0,OBJECT_SPACE:1,ARRAY_NO_SPACE:2};
